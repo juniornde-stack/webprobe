@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebProbe — Analyseur de Sécurité</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- Scanlines overlay -->
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="header">
+    <div class="header__logo">
+      <span class="logo__bracket">[</span>
+      <span class="logo__text">WEB<span class="logo__accent">PROBE</span></span>
+      <span class="logo__bracket">]</span>
+    </div>
+    <p class="header__tagline">Analyseur de sécurité web · INF232 EC2</p>
+    <div class="header__status">
+      <span class="status-dot"></span>
+      <span id="status-text">SYSTÈME EN LIGNE</span>
+    </div>
+  </header>
+
+  <!-- ═══ MAIN ═══ -->
+  <main class="main">
+
+    <!-- Formulaire de scan -->
+    <section class="scan-section">
+      <div class="terminal-window">
+        <div class="terminal-bar">
+          <span class="dot dot--red"></span>
+          <span class="dot dot--yellow"></span>
+          <span class="dot dot--green"></span>
+          <span class="terminal-bar__title">webprobe ~ scan</span>
+        </div>
+        <div class="terminal-body">
+          <p class="terminal-prompt">
+            <span class="prompt-symbol">$</span>
+            <span class="prompt-label"> target_url</span>
+            <span class="cursor-blink">█</span>
+          </p>
+          <div class="input-group">
+            <input
+              type="text"
+              id="url-input"
+              class="url-input"
+              placeholder="https://exemple.com"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button id="scan-btn" class="scan-btn">
+              <span id="scan-btn-text">SCANNER</span>
+              <span id="scan-spinner" class="spinner hidden">⠋</span>
+            </button>
+          </div>
+          <p class="terminal-hint">Entrez une URL complète · Ex : https://github.com</p>
+          <p class="error-msg hidden" id="error-msg"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Résultats -->
+    <section id="results" class="results hidden">
+
+      <!-- En-tête résultats -->
+      <div class="results-header">
+        <div class="results-header__left">
+          <p class="results-label">RAPPORT D'ANALYSE</p>
+          <h2 class="results-url" id="res-url"></h2>
+          <p class="results-meta" id="res-meta"></p>
+        </div>
+        <div class="risk-badge" id="risk-badge">
+          <span class="risk-badge__label">RISQUE</span>
+          <span class="risk-badge__score" id="risk-score"></span>
+          <span class="risk-badge__level" id="risk-level"></span>
+        </div>
+      </div>
+
+      <!-- Barre de risque -->
+      <div class="risk-bar-wrap">
+        <div class="risk-bar-track">
+          <div class="risk-bar-fill" id="risk-bar"></div>
+        </div>
+        <span class="risk-bar-label" id="risk-bar-label"></span>
+      </div>
+
+      <!-- Issues -->
+      <div id="issues-block" class="issues-block hidden">
+        <p class="block-title">⚠ PROBLÈMES DÉTECTÉS</p>
+        <ul id="issues-list" class="issues-list"></ul>
+      </div>
+
+      <!-- Grille de modules -->
+      <div class="modules-grid">
+
+        <!-- SSL -->
+        <div class="module" id="mod-ssl">
+          <div class="module__header">
+            <span class="module__icon">🔒</span>
+            <span class="module__title">Certificat SSL</span>
+            <span class="module__badge" id="ssl-badge"></span>
+          </div>
+          <div class="module__body" id="ssl-body"></div>
+        </div>
+
+        <!-- En-têtes HTTP -->
+        <div class="module" id="mod-headers">
+          <div class="module__header">
+            <span class="module__icon">📡</span>
+            <span class="module__title">En-têtes HTTP</span>
+            <span class="module__badge" id="headers-badge"></span>
+          </div>
+          <div class="module__body" id="headers-body"></div>
+        </div>
+
+        <!-- Formulaires -->
+        <div class="module" id="mod-forms">
+          <div class="module__header">
+            <span class="module__icon">📋</span>
+            <span class="module__title">Formulaires</span>
+            <span class="module__badge" id="forms-badge"></span>
+          </div>
+          <div class="module__body" id="forms-body"></div>
+        </div>
+
+        <!-- Contenu -->
+        <div class="module" id="mod-content">
+          <div class="module__header">
+            <span class="module__icon">🔍</span>
+            <span class="module__title">Analyse du contenu</span>
+            <span class="module__badge" id="content-badge"></span>
+          </div>
+          <div class="module__body" id="content-body"></div>
+        </div>
+
+        <!-- Technologies -->
+        <div class="module module--wide" id="mod-tech">
+          <div class="module__header">
+            <span class="module__icon">⚙</span>
+            <span class="module__title">Technologies détectées</span>
+          </div>
+          <div class="module__body" id="tech-body"></div>
+        </div>
+
+        <!-- Liens & Scripts -->
+        <div class="module module--wide" id="mod-links">
+          <div class="module__header">
+            <span class="module__icon">🌐</span>
+            <span class="module__title">Liens & Scripts externes</span>
+          </div>
+          <div class="module__body" id="links-body"></div>
+        </div>
+
+      </div><!-- /modules-grid -->
+
+      <!-- Nouveau scan -->
+      <div class="new-scan">
+        <button class="scan-btn scan-btn--ghost" id="new-scan-btn">↩ NOUVEAU SCAN</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <span>WebProbe v1.0 · INF232 EC2 · Cybersécurité &amp; IA</span>
+    <a href="/docs" target="_blank" class="footer__link">API Docs →</a>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

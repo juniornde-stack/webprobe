@@ -172,7 +172,10 @@
   <main class="main hidden" id="page-history">
     <div class="history-header">
       <h2 class="history-title">📁 HISTORIQUE DES ANALYSES</h2>
-      <button class="scan-btn scan-btn--export" id="btn-export">⬇ EXPORTER CSV</button>
+      <div style="display: flex; gap: 0.5rem;">
+          <button class="scan-btn scan-btn--export" id="btn-export">⬇ EXPORTER CSV</button>
+          <button class="scan-btn" id="btn-clear-history" style="border-color: #ff3355; color: #ff3355;">🗑️ TOUT SUPPRIMER</button>
+      </div>
     </div>
     <p class="history-sub" id="history-count"></p>
     <div id="history-table-wrap">

@@ -375,5 +375,21 @@ newScanBtn.addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
+// ─── AJOUTER CE CODE DANS app.js ─────────────────────────
+const btnClearHistory = document.getElementById("btn-clear-history");
+
+if (btnClearHistory) {
+    btnClearHistory.addEventListener("click", async () => {
+        if (confirm("⚠️ Supprimer tout l’historique ? Cette action est irréversible.")) {
+            const response = await fetch("/history/clear", { method: "DELETE" });
+            if (response.ok) {
+                alert("Historique supprimé.");
+                loadHistory(); // recharger la page historique vide
+            } else {
+                alert("Erreur lors de la suppression.");
+            }
+        }
+    });
+}
 // ─── Init ─────────────────────────────────────────────────
 urlInput.focus();

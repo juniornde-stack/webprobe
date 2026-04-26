@@ -500,6 +500,12 @@ def export_csv():
         headers={"Content-Disposition": "attachment; filename=webprobe_historique.csv"},
     )
 
+# _____ Bouton supprimer l'historique___________________________________________
+@app.delete("/history/clear", summary="Supprimer tout l'historique")
+def clear_history():
+    init_csv()  # réinitialise le fichier avec seulement les en-têtes
+    return {"message": "Historique supprimé avec succès."}
+    
 # ─── Endpoint : santé ─────────────────────────────────────────────────────────
 @app.get("/health", summary="Vérification du serveur")
 def health():

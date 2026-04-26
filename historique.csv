@@ -1,0 +1,7 @@
+timestamp,url,titre,status_code,ssl_valide,ssl_emetteur,ssl_jours_restants,headers_score,headers_manquants,mots_suspects,technologies,formulaires_total,formulaires_suspects,iframes,scripts_externes,risque_score,risque_niveau
+26/04/2026 à 09:59 UTC,http://sproutgigs.com,Attention Required! | Cloudflare,403,True,Google Trust Services,81,29,Strict-Transport-Security|Content-Security-Policy|X-Content-Type-Options|Permissions-Policy|X-XSS-Protection,attack,,0,0,0,0,21,Modéré
+26/04/2026 à 10:01 UTC,https://tiktok.com,Aucun titre,200,True,DigiCert Inc,50,29,X-Frame-Options|X-Content-Type-Options|Referrer-Policy|Permissions-Policy|X-XSS-Protection,,,0,0,0,2,8,Faible
+26/04/2026 à 10:02 UTC,https://netcore.com,Aucun titre,200,False,,,0,Strict-Transport-Security|Content-Security-Policy|X-Frame-Options|X-Content-Type-Options|Referrer-Policy|Permissions-Policy|X-XSS-Protection,,,0,0,0,0,54,Élevé
+26/04/2026 à 10:10 UTC,https://tor.com,Homepage - Reactor,200,True,Let's Encrypt,33,0,Strict-Transport-Security|Content-Security-Policy|X-Frame-Options|X-Content-Type-Options|Referrer-Policy|Permissions-Policy|X-XSS-Protection,exploit,WordPress,1,1,1,10,51,Élevé
+26/04/2026 à 10:13 UTC,https://ubuntu.com,"Enterprise Open Source and Linux
+    | Ubuntu",200,True,Let's Encrypt,80,71,X-Frame-Options|X-XSS-Protection,hack|malware,,2,0,1,1,23,Modéré

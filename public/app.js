@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
-   app.js — WebProbe Frontend
+   app.js — WebProbe v2.0
+   Scanner + Graphiques matplotlib + Page Historique
 ═══════════════════════════════════════════════════════════ */
 
-const API_BASE = "";  // même origine
+const API_BASE = "";
 
 // ─── Éléments DOM ─────────────────────────────────────────
 const urlInput    = document.getElementById("url-input");
@@ -13,17 +14,30 @@ const errorMsg    = document.getElementById("error-msg");
 const resultsEl   = document.getElementById("results");
 const newScanBtn  = document.getElementById("new-scan-btn");
 
-// ─── Spinner animation frames ──────────────────────────────
-const SPINNER_FRAMES = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
-let spinnerInterval = null;
-let spinnerIdx = 0;
+// ─── Navigation entre pages ───────────────────────────────
+document.querySelectorAll(".nav-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const page = btn.dataset.page;
+    document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    document.getElementById("page-scan").classList.toggle("hidden", page !== "scan");
+    document.getElementById("page-history").classList.toggle("hidden", page !== "history");
+
+    if (page === "history") loadHistory();
+  });
+});
+
+// ─── Spinner ──────────────────────────────────────────────
+const FRAMES = ["⠋","⠙","⠹","⠸","⠼","⠴","⠦","⠧","⠇","⠏"];
+let spinnerInterval = null, spinnerIdx = 0;
 
 function startSpinner() {
   scanBtnText.classList.add("hidden");
   scanSpinner.classList.remove("hidden");
   spinnerIdx = 0;
   spinnerInterval = setInterval(() => {
-    scanSpinner.textContent = SPINNER_FRAMES[spinnerIdx++ % SPINNER_FRAMES.length];
+    scanSpinner.textContent = FRAMES[spinnerIdx++ % FRAMES.length];
   }, 80);
   scanBtn.disabled = true;
 }
@@ -52,10 +66,7 @@ async function runScan() {
     });
 
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.detail || "Erreur serveur");
-    }
+    if (!res.ok) throw new Error(data.detail || "Erreur serveur");
 
     renderResults(data);
     resultsEl.classList.remove("hidden");
@@ -70,31 +81,30 @@ async function runScan() {
 
 // ─── Afficher les résultats ───────────────────────────────
 function renderResults(d) {
-  // En-tête
-  document.getElementById("res-url").textContent = d.url;
+  document.getElementById("res-url").textContent  = d.url;
   document.getElementById("res-meta").textContent =
-    `HTTP ${d.status_code} · Analysé le ${d.timestamp}`;
+    `HTTP ${d.status_code} · "${d.title}" · Analysé le ${d.timestamp}`;
 
   // Risque
-  const risk = d.risk;
+  const risk    = d.risk;
   const scoreEl = document.getElementById("risk-score");
   const levelEl = document.getElementById("risk-level");
   const badgeEl = document.getElementById("risk-badge");
   const barEl   = document.getElementById("risk-bar");
   const barLbl  = document.getElementById("risk-bar-label");
 
-  scoreEl.textContent = risk.score + "/100";
+  scoreEl.textContent = `${risk.score}/100`;
   levelEl.textContent = risk.level;
 
-  const colorMap = { green: "#00ff88", orange: "#ff8800", red: "#ff3355", darkred: "#cc0022" };
+  const colorMap = { green:"#00ff88", orange:"#ff8800", red:"#ff3355", darkred:"#cc0022" };
   const c = colorMap[risk.color] || "#00ff88";
-  scoreEl.style.color = c;
-  levelEl.style.color = c;
+  scoreEl.style.color    = c;
+  levelEl.style.color    = c;
   badgeEl.style.borderColor = c + "55";
   barEl.style.background = c;
   barEl.style.boxShadow  = `0 0 8px ${c}66`;
   setTimeout(() => { barEl.style.width = risk.score + "%"; }, 100);
-  barLbl.textContent = risk.score + "% de risque";
+  barLbl.textContent = `${risk.score}% de risque`;
 
   // Issues
   const issuesBlock = document.getElementById("issues-block");
@@ -107,17 +117,16 @@ function renderResults(d) {
     issuesBlock.classList.add("hidden");
   }
 
-  // SSL
+  // Graphiques matplotlib (base64 PNG)
+  document.getElementById("chart-radar").src = `data:image/png;base64,${d.charts.radar}`;
+  document.getElementById("chart-bars").src  = `data:image/png;base64,${d.charts.bars}`;
+
+  // Modules
   renderSSL(d.ssl);
-  // En-têtes
   renderHeaders(d.headers);
-  // Formulaires
   renderForms(d.forms);
-  // Contenu
   renderContent(d.content);
-  // Technologies
   renderTech(d.content);
-  // Liens & scripts
   renderLinks(d.content);
 }
 
@@ -134,7 +143,7 @@ function renderSSL(ssl) {
       ${row("Émetteur",  ssl.issuer || "Inconnu")}
       ${row("Expiration",ssl.expires || "—")}
       ${ssl.days_left !== undefined ? row("Jours restants",
-        `<span class="${ssl.days_left < 30 ? 'warn' : 'ok'}">${ssl.days_left} jours</span>`) : ""}
+        `<span class="${ssl.days_left < 30 ? "warn" : "ok"}">${ssl.days_left} jours</span>`) : ""}
     `;
   } else {
     badge.textContent = "INVALIDE";
@@ -152,32 +161,26 @@ function renderHeaders(h) {
   const badge = document.getElementById("headers-badge");
   const score = h.score;
 
-  badge.textContent = score + "%";
+  badge.textContent = `${score}%`;
   badge.className   = `module__badge ${score >= 70 ? "badge--ok" : score >= 40 ? "badge--warn" : "badge--danger"}`;
 
-  const allHeaders = [
-    "Strict-Transport-Security",
-    "Content-Security-Policy",
-    "X-Frame-Options",
-    "X-Content-Type-Options",
-    "Referrer-Policy",
-    "Permissions-Policy",
-    "X-XSS-Protection",
+  const ALL = [
+    "Strict-Transport-Security","Content-Security-Policy","X-Frame-Options",
+    "X-Content-Type-Options","Referrer-Policy","Permissions-Policy","X-XSS-Protection",
   ];
 
   let chips = '<div class="header-chips">';
-  allHeaders.forEach(hdr => {
+  ALL.forEach(hdr => {
     const present = h.present.includes(hdr);
-    chips += `
-      <div class="header-chip">
-        <span class="chip-dot ${present ? "chip-dot--ok" : "chip-dot--miss"}"></span>
-        <span class="chip-name">${hdr}</span>
-      </div>`;
+    chips += `<div class="header-chip">
+      <span class="chip-dot ${present ? "chip-dot--ok" : "chip-dot--miss"}"></span>
+      <span class="chip-name">${hdr}</span>
+    </div>`;
   });
   chips += "</div>";
 
   let extra = "";
-  if (h.server) extra += row("Serveur", h.server);
+  if (h.server)      extra += row("Serveur", h.server);
   if (h.x_powered_by) extra += row("X-Powered-By", `<span class="warn">${h.x_powered_by}</span>`);
 
   body.innerHTML = chips + extra;
@@ -195,16 +198,16 @@ function renderForms(f) {
     return;
   }
 
-  const hasSuspicious = f.suspicious_count > 0;
-  badge.textContent = hasSuspicious ? f.suspicious_count + " SUSPECTS" : f.count + " OK";
-  badge.className   = `module__badge ${hasSuspicious ? "badge--danger" : "badge--ok"}`;
+  const susp = f.suspicious_count > 0;
+  badge.textContent = susp ? `${f.suspicious_count} SUSPECTS` : `${f.count} OK`;
+  badge.className   = `module__badge ${susp ? "badge--danger" : "badge--ok"}`;
 
   let html = row("Total", f.count);
-  html += row("Suspects", hasSuspicious
+  html += row("Suspects", susp
     ? `<span class="danger">${f.suspicious_count}</span>`
     : `<span class="ok">0</span>`);
 
-  if (hasSuspicious) {
+  if (susp) {
     f.suspicious_forms.forEach((frm, i) => {
       html += `<div style="margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--bg-panel)">`;
       html += row(`Form ${i + 1}`, `${frm.method} → ${frm.action}`);
@@ -224,7 +227,7 @@ function renderContent(c) {
   const badge = document.getElementById("content-badge");
   const words = c.suspicious_words || [];
 
-  badge.textContent = words.length > 0 ? words.length + " SUSPECTS" : "CLEAN";
+  badge.textContent = words.length > 0 ? `${words.length} SUSPECTS` : "CLEAN";
   badge.className   = `module__badge ${words.length > 0 ? "badge--warn" : "badge--ok"}`;
 
   let html = "";
@@ -234,11 +237,8 @@ function renderContent(c) {
     ? `<span class="warn">${c.iframes.length}</span>`
     : `<span class="ok">0</span>`);
   html += row("Scripts externes", c.external_scripts?.length || 0);
-
-  if (words.length > 0) {
-    html += row("Mots suspects",
-      `<span class="warn">${words.join(", ")}</span>`);
-  }
+  if (words.length > 0)
+    html += row("Mots suspects", `<span class="warn">${words.join(", ")}</span>`);
 
   body.innerHTML = html;
 }
@@ -248,12 +248,9 @@ function renderTech(c) {
   const body = document.getElementById("tech-body");
   const tech = c.technologies || [];
 
-  if (tech.length === 0) {
-    body.innerHTML = `<p class="module-empty">Aucune technologie identifiée</p>`;
-    return;
-  }
-
-  body.innerHTML = `<div class="tech-tags">${tech.map(t => `<span class="tech-tag">${t}</span>`).join("")}</div>`;
+  body.innerHTML = tech.length === 0
+    ? `<p class="module-empty">Aucune technologie identifiée</p>`
+    : `<div class="tech-tags">${tech.map(t => `<span class="tech-tag">${t}</span>`).join("")}</div>`;
 }
 
 // ─── Liens & Scripts ──────────────────────────────────────
@@ -266,33 +263,98 @@ function renderLinks(c) {
 
   html += '<div>';
   html += `<p style="font-size:.68rem;letter-spacing:.1em;color:var(--ink-muted);margin-bottom:.5rem">LIENS EXTERNES (${ext.length})</p>`;
-  if (ext.length > 0) {
-    html += `<div class="scroll-list">${ext.map(l => `<a href="${l}" target="_blank" rel="noopener">${l}</a>`).join("")}</div>`;
-  } else {
-    html += `<p class="module-empty">Aucun</p>`;
-  }
+  html += ext.length > 0
+    ? `<div class="scroll-list">${ext.map(l => `<a href="${l}" target="_blank" rel="noopener">${l}</a>`).join("")}</div>`
+    : `<p class="module-empty">Aucun</p>`;
   html += '</div>';
 
   html += '<div>';
   html += `<p style="font-size:.68rem;letter-spacing:.1em;color:var(--ink-muted);margin-bottom:.5rem">SCRIPTS EXTERNES (${scr.length})</p>`;
-  if (scr.length > 0) {
-    html += `<div class="scroll-list">${scr.map(s => `<span>${s}</span>`).join("")}</div>`;
-  } else {
-    html += `<p class="module-empty">Aucun</p>`;
-  }
+  html += scr.length > 0
+    ? `<div class="scroll-list">${scr.map(s => `<span>${s}</span>`).join("")}</div>`
+    : `<p class="module-empty">Aucun</p>`;
   html += '</div>';
 
   html += '</div>';
   body.innerHTML = html;
 }
 
+// ─── PAGE HISTORIQUE ──────────────────────────────────────
+async function loadHistory() {
+  const tbody   = document.getElementById("history-tbody");
+  const countEl = document.getElementById("history-count");
+  const emptyEl = document.getElementById("history-empty");
+  const scroll  = document.getElementById("history-table-scroll");
+
+  tbody.innerHTML = "";
+
+  try {
+    const res  = await fetch("/history");
+    const data = await res.json();
+    const rows = data.history || [];
+
+    countEl.textContent = `${rows.length} analyse(s) enregistrée(s)`;
+
+    if (rows.length === 0) {
+      emptyEl.classList.remove("hidden");
+      scroll.classList.add("hidden");
+      return;
+    }
+
+    emptyEl.classList.add("hidden");
+    scroll.classList.remove("hidden");
+
+    rows.forEach(r => {
+      const score = parseInt(r.risque_score) || 0;
+      const level = r.risque_niveau || "—";
+
+      const levelColor = {
+        "Faible": "#00ff88", "Modéré": "#ff8800",
+        "Élevé": "#ff3355", "Critique": "#cc0022"
+      }[level] || "#5a7a9a";
+
+      const sslIcon = r.ssl_valide === "True" ? "✔" : "✘";
+      const sslColor = r.ssl_valide === "True" ? "var(--green)" : "var(--red)";
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${r.timestamp}</td>
+        <td title="${r.url}">${r.url}</td>
+        <td title="${r.titre}">${r.titre}</td>
+        <td style="color:${sslColor}">${sslIcon} ${r.ssl_valide === "True" ? "Valide" : "Invalide"}</td>
+        <td>${r.headers_score}%</td>
+        <td style="color:${parseInt(r.formulaires_suspects) > 0 ? "var(--red)" : "var(--green)"}">
+          ${r.formulaires_suspects}
+        </td>
+        <td style="color:${r.mots_suspects ? "var(--orange)" : "var(--green)"}">
+          ${r.mots_suspects || "—"}
+        </td>
+        <td style="color:${levelColor}">${score}/100</td>
+        <td>
+          <span class="badge-pill" style="background:${levelColor}22;color:${levelColor};border:1px solid ${levelColor}55">
+            ${level}
+          </span>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+
+  } catch {
+    countEl.textContent = "Erreur lors du chargement de l'historique.";
+  }
+}
+
+// ─── Export CSV ───────────────────────────────────────────
+document.getElementById("btn-export").addEventListener("click", () => {
+  window.location.href = "/history/export";
+});
+
 // ─── Helpers ──────────────────────────────────────────────
 function row(key, val) {
-  return `
-    <div class="info-row">
-      <span class="info-row__key">${key}</span>
-      <span class="info-row__val">${val}</span>
-    </div>`;
+  return `<div class="info-row">
+    <span class="info-row__key">${key}</span>
+    <span class="info-row__val">${val}</span>
+  </div>`;
 }
 
 function showError(msg) {
@@ -300,16 +362,11 @@ function showError(msg) {
   errorMsg.classList.remove("hidden");
 }
 
-function hideError() {
-  errorMsg.classList.add("hidden");
-}
+function hideError() { errorMsg.classList.add("hidden"); }
 
 // ─── Événements ───────────────────────────────────────────
 scanBtn.addEventListener("click", runScan);
-
-urlInput.addEventListener("keydown", e => {
-  if (e.key === "Enter") runScan();
-});
+urlInput.addEventListener("keydown", e => { if (e.key === "Enter") runScan(); });
 
 newScanBtn.addEventListener("click", () => {
   resultsEl.classList.add("hidden");
@@ -318,5 +375,5 @@ newScanBtn.addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-// Focus auto
+// ─── Init ─────────────────────────────────────────────────
 urlInput.focus();

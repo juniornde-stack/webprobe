@@ -10,7 +10,6 @@
 </head>
 <body>
 
-  <!-- Scanlines overlay -->
   <div class="scanlines" aria-hidden="true"></div>
 
   <!-- ═══ HEADER ═══ -->
@@ -21,16 +20,19 @@
       <span class="logo__bracket">]</span>
     </div>
     <p class="header__tagline">Analyseur de sécurité web · INF232 EC2</p>
+    <div class="header__nav">
+      <button class="nav-btn active" data-page="scan">Scanner</button>
+      <button class="nav-btn" data-page="history">Historique</button>
+    </div>
     <div class="header__status">
       <span class="status-dot"></span>
       <span id="status-text">SYSTÈME EN LIGNE</span>
     </div>
   </header>
 
-  <!-- ═══ MAIN ═══ -->
-  <main class="main">
+  <!-- ═══ PAGE : SCANNER ═══ -->
+  <main class="main" id="page-scan">
 
-    <!-- Formulaire de scan -->
     <section class="scan-section">
       <div class="terminal-window">
         <div class="terminal-bar">
@@ -46,14 +48,8 @@
             <span class="cursor-blink">█</span>
           </p>
           <div class="input-group">
-            <input
-              type="text"
-              id="url-input"
-              class="url-input"
-              placeholder="https://exemple.com"
-              autocomplete="off"
-              spellcheck="false"
-            />
+            <input type="text" id="url-input" class="url-input"
+              placeholder="https://exemple.com" autocomplete="off" spellcheck="false" />
             <button id="scan-btn" class="scan-btn">
               <span id="scan-btn-text">SCANNER</span>
               <span id="scan-spinner" class="spinner hidden">⠋</span>
@@ -68,7 +64,6 @@
     <!-- Résultats -->
     <section id="results" class="results hidden">
 
-      <!-- En-tête résultats -->
       <div class="results-header">
         <div class="results-header__left">
           <p class="results-label">RAPPORT D'ANALYSE</p>
@@ -82,7 +77,6 @@
         </div>
       </div>
 
-      <!-- Barre de risque -->
       <div class="risk-bar-wrap">
         <div class="risk-bar-track">
           <div class="risk-bar-fill" id="risk-bar"></div>
@@ -90,16 +84,29 @@
         <span class="risk-bar-label" id="risk-bar-label"></span>
       </div>
 
-      <!-- Issues -->
       <div id="issues-block" class="issues-block hidden">
         <p class="block-title">⚠ PROBLÈMES DÉTECTÉS</p>
         <ul id="issues-list" class="issues-list"></ul>
       </div>
 
-      <!-- Grille de modules -->
+      <!-- ── Graphiques matplotlib ── -->
+      <div class="charts-section">
+        <p class="charts-title">📊 VISUALISATION DES RISQUES</p>
+        <div class="charts-grid">
+          <div class="chart-card">
+            <p class="chart-card__label">Radar — risque par catégorie</p>
+            <img id="chart-radar" class="chart-img" src="" alt="Graphique radar" />
+          </div>
+          <div class="chart-card">
+            <p class="chart-card__label">Barres — score par module</p>
+            <img id="chart-bars" class="chart-img" src="" alt="Graphique barres" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Grille modules -->
       <div class="modules-grid">
 
-        <!-- SSL -->
         <div class="module" id="mod-ssl">
           <div class="module__header">
             <span class="module__icon">🔒</span>
@@ -109,7 +116,6 @@
           <div class="module__body" id="ssl-body"></div>
         </div>
 
-        <!-- En-têtes HTTP -->
         <div class="module" id="mod-headers">
           <div class="module__header">
             <span class="module__icon">📡</span>
@@ -119,7 +125,6 @@
           <div class="module__body" id="headers-body"></div>
         </div>
 
-        <!-- Formulaires -->
         <div class="module" id="mod-forms">
           <div class="module__header">
             <span class="module__icon">📋</span>
@@ -129,7 +134,6 @@
           <div class="module__body" id="forms-body"></div>
         </div>
 
-        <!-- Contenu -->
         <div class="module" id="mod-content">
           <div class="module__header">
             <span class="module__icon">🔍</span>
@@ -139,7 +143,6 @@
           <div class="module__body" id="content-body"></div>
         </div>
 
-        <!-- Technologies -->
         <div class="module module--wide" id="mod-tech">
           <div class="module__header">
             <span class="module__icon">⚙</span>
@@ -148,7 +151,6 @@
           <div class="module__body" id="tech-body"></div>
         </div>
 
-        <!-- Liens & Scripts -->
         <div class="module module--wide" id="mod-links">
           <div class="module__header">
             <span class="module__icon">🌐</span>
@@ -157,20 +159,47 @@
           <div class="module__body" id="links-body"></div>
         </div>
 
-      </div><!-- /modules-grid -->
+      </div>
 
-      <!-- Nouveau scan -->
       <div class="new-scan">
         <button class="scan-btn scan-btn--ghost" id="new-scan-btn">↩ NOUVEAU SCAN</button>
       </div>
 
     </section>
-
   </main>
 
-  <!-- Footer -->
+  <!-- ═══ PAGE : HISTORIQUE ═══ -->
+  <main class="main hidden" id="page-history">
+    <div class="history-header">
+      <h2 class="history-title">📁 HISTORIQUE DES ANALYSES</h2>
+      <button class="scan-btn scan-btn--export" id="btn-export">⬇ EXPORTER CSV</button>
+    </div>
+    <p class="history-sub" id="history-count"></p>
+    <div id="history-table-wrap">
+      <p class="module-empty" id="history-empty" style="text-align:center;padding:3rem">Aucune analyse enregistrée.</p>
+      <div class="history-table-scroll hidden" id="history-table-scroll">
+        <table class="history-table" id="history-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>URL</th>
+              <th>Titre</th>
+              <th>SSL</th>
+              <th>En-têtes</th>
+              <th>Formulaires suspects</th>
+              <th>Mots suspects</th>
+              <th>Risque</th>
+              <th>Niveau</th>
+            </tr>
+          </thead>
+          <tbody id="history-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
   <footer class="footer">
-    <span>WebProbe v1.0 · INF232 EC2 · Cybersécurité &amp; IA</span>
+    <span>WebProbe v2.0 · INF232 EC2 · Cybersécurité &amp; IA</span>
     <a href="/docs" target="_blank" class="footer__link">API Docs →</a>
   </footer>
 

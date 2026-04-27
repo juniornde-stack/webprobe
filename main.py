@@ -129,17 +129,29 @@ SECURITY_HEADERS = [
 ]
 
 CMS_SIGNATURES = {
-    "WordPress":   ["/wp-content/", "/wp-includes/", "wp-json"],
-    "Joomla":      ["/components/com_", "Joomla!", "/media/jui/"],
-    "Drupal":      ["Drupal.settings", "/sites/default/files/", "drupal.js"],
-    "Wix":         ["wix.com", "wixstatic.com"],
-    "Shopify":     ["cdn.shopify.com", "Shopify.theme"],
-    "Squarespace": ["squarespace.com", "squarespace-cdn.com"],
-    "Django":      ["csrfmiddlewaretoken", "__admin__"],
-    "Laravel":     ["laravel_session", "XSRF-TOKEN"],
-    "Next.js":     ["__NEXT_DATA__", "_next/static/"],
-    "React":       ["react-root", "__reactFiber", "data-reactroot"],
-    "Vue.js":      ["__vue__", "data-v-app"],
+    # === CMS & Plateformes ===
+    "WordPress":       ["/wp-content/", "/wp-includes/", "wp-json"],
+    "Joomla":          ["/components/com_", "Joomla!", "/media/jui/"],
+    "Drupal":          ["Drupal.settings", "/sites/default/files/", "drupal.js"],
+    "Wix":             ["wix.com", "wixstatic.com"],
+    "Shopify":         ["cdn.shopify.com", "Shopify.theme"],
+    "Squarespace":     ["squarespace.com", "squarespace-cdn.com"],
+
+    # === Frameworks back-end ===
+    "Django":          ["csrfmiddlewaretoken", "__admin__"],
+    "Laravel":         ["laravel_session", "XSRF-TOKEN", "laravel"],
+    "Ruby on Rails":   ["rails", "csrf-param", "data-turbo"],
+    "ASP.NET":         ["__VIEWSTATE", "__EVENTVALIDATION", "aspnet"],
+    "Symfony":         ["symfony", "_sf2_"],
+    "Flask":           ["flask", "__INIT__"],
+    "Go":              ["go/", "golang", "goroutine"],
+    "PHP":             [".php", "?php"],
+
+    # === Frameworks front-end ===
+    "React":           ["react-root", "__reactFiber", "data-reactroot"],
+    "Next.js":         ["__NEXT_DATA__", "_next/static/"],
+    "Vue.js":          ["__vue__", "data-v-app"],
+    "Angular":         ["ng-version", "ng-app"],
 }
 
 FORM_SUSPICIOUS_TYPES = ["password", "credit-card", "card", "cvv", "pin", "ssn", "social"]
